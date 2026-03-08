@@ -5,11 +5,34 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 10;
+const WINDOW_MS = 60_000;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Rate limiting
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const now = Date.now();
+
+  // Prune expired entries
+  for (const [key, val] of rateLimitMap) {
+    if (val.resetAt < now) rateLimitMap.delete(key);
+  }
+
+  const entry = rateLimitMap.get(ip) || { count: 0, resetAt: now + WINDOW_MS };
+  if (!rateLimitMap.has(ip)) rateLimitMap.set(ip, entry);
+
+  if (entry.count >= RATE_LIMIT) {
+    return new Response(
+      JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }),
+      { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+  entry.count++;
 
   try {
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
