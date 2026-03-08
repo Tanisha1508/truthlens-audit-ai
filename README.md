@@ -36,7 +36,7 @@ and end-to-end shipping using modern AI-native tooling.
 | Frontend | React + TypeScript + Tailwind CSS |
 | AI + Fact Verification | Gemini 2.0 Flash API with Search Grounding |
 | Edge Function | Supabase Edge Functions (Deno) |
-| Deployment | Lovable + Vercel |
+| Deployment | Lovable |
 
 ---
 
