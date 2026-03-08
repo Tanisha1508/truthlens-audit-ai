@@ -1,1 +1,4 @@
 project_id = "emtxehykrznyconytjpl"
+
+[functions.analyze-claims]
+verify_jwt = false
