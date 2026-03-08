@@ -1,12 +1,106 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Upload } from "lucide-react";
+
+const AI_SOURCES = ["ChatGPT", "Claude", "Gemini", "Copilot", "Other"] as const;
 
 const Index = () => {
+  const [selectedSource, setSelectedSource] = useState<string>("ChatGPT");
+  const [text, setText] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const f = e.dataTransfer.files[0];
+    if (f?.type === "application/pdf") setFile(f);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f?.type === "application/pdf") setFile(f);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      {/* Navbar */}
+      <header className="border-b border-border px-6 py-4 flex items-center justify-between">
+        <h1 className="text-xl font-bold text-primary tracking-tight">TruthLens AI</h1>
+        <p className="text-sm text-muted-foreground hidden sm:block">
+          Audit AI-generated content before it reaches your clients
+        </p>
+      </header>
+
+      {/* Main */}
+      <main className="mx-auto max-w-[860px] px-4 py-10 space-y-8">
+        {/* Tabs */}
+        <Tabs defaultValue="paste" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-xs mx-auto">
+            <TabsTrigger value="paste">Paste Text</TabsTrigger>
+            <TabsTrigger value="upload">Upload PDF</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="paste" className="mt-6">
+            <Textarea
+              rows={8}
+              placeholder="Paste any AI-generated text here..."
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              className="resize-none text-base"
+            />
+          </TabsContent>
+
+          <TabsContent value="upload" className="mt-6">
+            <label
+              onDrop={handleDrop}
+              onDragOver={(e) => e.preventDefault()}
+              className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/40 py-16 cursor-pointer hover:border-accent transition-colors"
+            >
+              <Upload className="h-10 w-10 text-muted-foreground" />
+              <p className="text-sm font-medium text-foreground">
+                {file ? file.name : "Drag a PDF here or click to browse"}
+              </p>
+              <p className="text-xs text-muted-foreground">PDF files only</p>
+              <input
+                type="file"
+                accept=".pdf"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+            </label>
+          </TabsContent>
+        </Tabs>
+
+        {/* AI Source Selector */}
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {AI_SOURCES.map((source) => (
+            <button
+              key={source}
+              onClick={() => setSelectedSource(source)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium border transition-colors ${
+                selectedSource === source
+                  ? "bg-accent text-accent-foreground border-accent"
+                  : "bg-background text-muted-foreground border-border hover:border-accent/50"
+              }`}
+            >
+              {source}
+            </button>
+          ))}
+        </div>
+
+        {/* Analyse Button */}
+        <div className="flex justify-center">
+          <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground px-10 text-base font-semibold">
+            Analyse Now
+          </Button>
+        </div>
+
+        {/* Results Placeholder */}
+        <div className="rounded-lg bg-muted p-12 text-center">
+          <p className="text-muted-foreground">Your audit will appear here</p>
+        </div>
+      </main>
     </div>
   );
 };
