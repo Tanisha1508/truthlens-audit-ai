@@ -5,9 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, Loader2, FileText, AlertCircle } from "lucide-react";
 
+const MOCK_SCORE = 38;
+const MOCK_CLAIMS = [
+  { text: "The unemployment rate fell to 2.3% in Q3 2023", color: "#DC2626", label: "Hallucinated" },
+  { text: "Remote work increased productivity by 22% globally", color: "#D97706", label: "Uncertain" },
+  { text: "OpenAI was founded in 2015", color: "#16A34A", label: "Verified" },
+  { text: "McKinsey reports 80% of Fortune 500 firms use generative AI daily", color: "#DC2626", label: "Hallucinated" },
+];
+
 const Index = () => {
   const [text, setText] = useState("");
   const [activeTab, setActiveTab] = useState("paste");
+  const [showResults, setShowResults] = useState(false);
 
   // PDF state
   const [pdfText, setPdfText] = useState<string | null>(null);
@@ -155,14 +164,59 @@ const Index = () => {
         </Tabs>
 
         <div className="flex justify-center">
-          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 text-base font-semibold rounded-lg">
+          <Button size="lg" onClick={() => setShowResults(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 text-base font-semibold rounded-lg">
             Analyse Now
           </Button>
         </div>
 
-        <div className="rounded-lg bg-[hsl(0_0%_96%)] p-12 text-center">
-          <p className="text-muted-foreground">Your audit will appear here</p>
-        </div>
+        {showResults ? (
+          <div className="rounded-lg border border-border bg-card p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left — Circular Gauge */}
+              <div className="flex flex-col items-center justify-center gap-3">
+                <svg width="120" height="120" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
+                  <circle
+                    cx="60" cy="60" r="52" fill="none"
+                    stroke="#DC2626" strokeWidth="8" strokeLinecap="round"
+                    strokeDasharray="327" strokeDashoffset={327 * (1 - MOCK_SCORE / 100)}
+                    transform="rotate(-90 60 60)"
+                  />
+                  <text x="60" y="55" textAnchor="middle" className="text-3xl font-bold fill-foreground" fontSize="28" fontWeight="700">
+                    {MOCK_SCORE}
+                  </text>
+                  <text x="60" y="75" textAnchor="middle" className="fill-muted-foreground" fontSize="12">
+                    /100
+                  </text>
+                </svg>
+                <span className="text-sm font-bold" style={{ color: "#DC2626" }}>High Risk</span>
+              </div>
+
+              {/* Right — Claim chips */}
+              <div className="flex flex-col gap-3">
+                {MOCK_CLAIMS.map((claim, i) => (
+                  <div
+                    key={i}
+                    className="rounded-lg border-l-4 bg-muted/50 p-4"
+                    style={{ borderLeftColor: claim.color }}
+                  >
+                    <p className="text-sm text-foreground mb-1">{claim.text}</p>
+                    <span
+                      className="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
+                      style={{ color: claim.color, backgroundColor: `${claim.color}18` }}
+                    >
+                      {claim.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-lg bg-muted p-12 text-center">
+            <p className="text-muted-foreground">Your audit will appear here</p>
+          </div>
+        )}
       </main>
     </div>
   );
