@@ -174,9 +174,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-[hsl(0_0%_11%)] px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-primary-foreground tracking-tight">TruthLens AI</h1>
-        <p className="text-sm text-muted-foreground hidden sm:block">
+      <header className="bg-[hsl(0_0%_11%)] px-4 sm:px-6 py-4 flex items-center justify-between gap-4 min-w-0">
+        <h1 className="text-lg sm:text-xl font-bold text-primary-foreground tracking-tight shrink-0">TruthLens AI</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block truncate min-w-0">
           Audit AI-generated content before it reaches your clients
         </p>
       </header>
