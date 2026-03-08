@@ -5,10 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, Loader2, FileText, AlertCircle } from "lucide-react";
 
-const AI_SOURCES = ["ChatGPT", "Claude", "Gemini", "Copilot", "Other"] as const;
-
 const Index = () => {
-  const [selectedSource, setSelectedSource] = useState<string>("ChatGPT");
   const [text, setText] = useState("");
   const [activeTab, setActiveTab] = useState("paste");
 
@@ -98,7 +95,7 @@ const Index = () => {
             <TabsTrigger value="upload" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Upload PDF</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="paste" className="mt-6 space-y-6">
+          <TabsContent value="paste" className="mt-6">
             <Textarea
               rows={8}
               placeholder="Paste any AI-generated text here..."
@@ -106,22 +103,6 @@ const Index = () => {
               onChange={(e) => setText(e.target.value)}
               className="resize-none text-base text-[hsl(0_0%_24%)]"
             />
-            {/* LLM source selector — only for paste tab */}
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {AI_SOURCES.map((source) => (
-                <button
-                  key={source}
-                  onClick={() => setSelectedSource(source)}
-                  className={`rounded-full px-4 py-1.5 text-sm font-medium border transition-colors ${
-                    selectedSource === source
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-secondary text-foreground border-border hover:border-primary/50"
-                  }`}
-                >
-                  {source}
-                </button>
-              ))}
-            </div>
           </TabsContent>
 
           <TabsContent value="upload" className="mt-6">
