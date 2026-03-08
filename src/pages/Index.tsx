@@ -217,6 +217,31 @@ const Index = () => {
             <p className="text-muted-foreground">Your audit will appear here</p>
           </div>
         )}
+
+        {showResults && (
+          <div className="rounded-lg border border-border bg-card p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Highlighted Analysis</h2>
+            <p className="text-sm leading-relaxed text-foreground">
+              According to recent data,{" "}
+              <span className="rounded px-1" style={{ backgroundColor: "rgba(220, 38, 38, 0.2)" }}>
+                the unemployment rate fell to 2.3% in Q3 2023
+              </span>
+              , while{" "}
+              <span className="rounded px-1" style={{ backgroundColor: "rgba(217, 119, 6, 0.2)" }}>
+                remote work increased productivity by 22% globally
+              </span>
+              .{" "}
+              <span className="rounded px-1" style={{ backgroundColor: "rgba(22, 163, 74, 0.2)" }}>
+                OpenAI was founded in 2015
+              </span>
+              , and McKinsey reports{" "}
+              <span className="rounded px-1" style={{ backgroundColor: "rgba(220, 38, 38, 0.2)" }}>
+                80% of Fortune 500 firms use generative AI daily
+              </span>
+              .
+            </p>
+          </div>
+        )}
       </main>
     </div>
   );
