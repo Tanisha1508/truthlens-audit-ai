@@ -25,8 +25,8 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Navbar */}
-      <header className="border-b border-border px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-primary tracking-tight">TruthLens AI</h1>
+      <header className="bg-[hsl(0_0%_11%)] px-6 py-4 flex items-center justify-between">
+        <h1 className="text-xl font-bold text-white tracking-tight">TruthLens AI</h1>
         <p className="text-sm text-muted-foreground hidden sm:block">
           Audit AI-generated content before it reaches your clients
         </p>
@@ -36,9 +36,9 @@ const Index = () => {
       <main className="mx-auto max-w-[860px] px-4 py-10 space-y-8">
         {/* Tabs */}
         <Tabs defaultValue="paste" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-xs mx-auto">
-            <TabsTrigger value="paste">Paste Text</TabsTrigger>
-            <TabsTrigger value="upload">Upload PDF</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 max-w-xs mx-auto bg-secondary">
+            <TabsTrigger value="paste" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Paste Text</TabsTrigger>
+            <TabsTrigger value="upload" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Upload PDF</TabsTrigger>
           </TabsList>
 
           <TabsContent value="paste" className="mt-6">
@@ -47,7 +47,7 @@ const Index = () => {
               placeholder="Paste any AI-generated text here..."
               value={text}
               onChange={(e) => setText(e.target.value)}
-              className="resize-none text-base"
+              className="resize-none text-base text-[hsl(0_0%_24%)]"
             />
           </TabsContent>
 
@@ -55,7 +55,7 @@ const Index = () => {
             <label
               onDrop={handleDrop}
               onDragOver={(e) => e.preventDefault()}
-              className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/40 py-16 cursor-pointer hover:border-accent transition-colors"
+              className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-secondary py-16 cursor-pointer hover:border-primary/50 transition-colors"
             >
               <Upload className="h-10 w-10 text-muted-foreground" />
               <p className="text-sm font-medium text-foreground">
@@ -80,8 +80,8 @@ const Index = () => {
               onClick={() => setSelectedSource(source)}
               className={`rounded-full px-4 py-1.5 text-sm font-medium border transition-colors ${
                 selectedSource === source
-                  ? "bg-accent text-accent-foreground border-accent"
-                  : "bg-background text-muted-foreground border-border hover:border-accent/50"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-secondary text-foreground border-border hover:border-primary/50"
               }`}
             >
               {source}
@@ -91,13 +91,13 @@ const Index = () => {
 
         {/* Analyse Button */}
         <div className="flex justify-center">
-          <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground px-10 text-base font-semibold">
+          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 text-base font-semibold rounded-lg">
             Analyse Now
           </Button>
         </div>
 
         {/* Results Placeholder */}
-        <div className="rounded-lg bg-muted p-12 text-center">
+        <div className="rounded-lg bg-[hsl(0_0%_96%)] p-12 text-center">
           <p className="text-muted-foreground">Your audit will appear here</p>
         </div>
       </main>
