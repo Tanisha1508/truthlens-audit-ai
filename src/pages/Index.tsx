@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, Loader2, FileText, AlertCircle } from "lucide-react";
+import { Upload, Loader2, FileText, AlertCircle, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -25,12 +25,16 @@ const verdictColorMap: Record<string, string> = {
   Hallucinated: "#DC2626",
 };
 
+const MAX_CHARS = 4000;
+const MAX_PDF_SIZE = 5 * 1024 * 1024;
+
 const Index = () => {
   const [text, setText] = useState("");
   const [activeTab, setActiveTab] = useState("paste");
   const [showResults, setShowResults] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // PDF state
   const [pdfText, setPdfText] = useState<string | null>(null);
@@ -40,6 +44,11 @@ const Index = () => {
   const [pdfError, setPdfError] = useState<string | null>(null);
 
   const processPdf = useCallback(async (f: File) => {
+    if (f.size > MAX_PDF_SIZE) {
+      setPdfError("This PDF is too large. Please try a smaller file.");
+      return;
+    }
+
     setPdfLoading(true);
     setPdfError(null);
 
@@ -84,27 +93,50 @@ const Index = () => {
     setPdfError(null);
   };
 
+  const handleClear = () => {
+    setText("");
+    clearPdf();
+    setShowResults(false);
+    setResult(null);
+    setApiError(null);
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const f = e.dataTransfer.files[0];
-    if (f?.type === "application/pdf") processPdf(f);
+    if (f?.type === "application/pdf") {
+      if (f.size > MAX_PDF_SIZE) {
+        setPdfError("This PDF is too large. Please try a smaller file.");
+        return;
+      }
+      processPdf(f);
+    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f?.type === "application/pdf") processPdf(f);
+    if (f?.type === "application/pdf") {
+      if (f.size > MAX_PDF_SIZE) {
+        setPdfError("This PDF is too large. Please try a smaller file.");
+        return;
+      }
+      processPdf(f);
+    }
   };
 
   const handleAnalyse = async () => {
-    const inputText = activeTab === "paste" ? text : pdfText;
+    let inputText = activeTab === "paste" ? text : pdfText;
     if (!inputText?.trim()) {
-      toast.error("Please enter or upload some text to analyse.");
+      toast.error("Please paste text or upload a PDF first.");
       return;
     }
+
+    inputText = inputText.slice(0, MAX_CHARS);
 
     setLoading(true);
     setShowResults(false);
     setResult(null);
+    setApiError(null);
 
     try {
       const { data, error } = await supabase.functions.invoke("analyze-claims", {
@@ -113,13 +145,13 @@ const Index = () => {
 
       if (error) {
         console.error("Edge function error:", error);
-        toast.error("Analysis failed. Please try again.");
+        setApiError("Audit failed. Check your API key and try again.");
         return;
       }
 
       if (data?.error) {
         console.error("API error:", data.error);
-        toast.error(data.error);
+        setApiError("Audit failed. Check your API key and try again.");
         return;
       }
 
@@ -127,7 +159,7 @@ const Index = () => {
       setShowResults(true);
     } catch (e) {
       console.error("Unexpected error:", e);
-      toast.error("Something went wrong. Please try again.");
+      setApiError("Audit failed. Check your API key and try again.");
     } finally {
       setLoading(false);
     }
@@ -143,7 +175,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-[hsl(0_0%_11%)] px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-white tracking-tight">TruthLens AI</h1>
+        <h1 className="text-xl font-bold text-primary-foreground tracking-tight">TruthLens AI</h1>
         <p className="text-sm text-muted-foreground hidden sm:block">
           Audit AI-generated content before it reaches your clients
         </p>
@@ -157,6 +189,19 @@ const Index = () => {
           </Alert>
         )}
 
+        <div className="flex items-center justify-between">
+          <div className="flex-1" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClear}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X className="mr-1 h-4 w-4" />
+            Clear
+          </Button>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 max-w-xs mx-auto bg-secondary">
             <TabsTrigger value="paste" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Paste Text</TabsTrigger>
@@ -169,8 +214,18 @@ const Index = () => {
               placeholder="Paste any AI-generated text here..."
               value={text}
               onChange={(e) => setText(e.target.value)}
-              className="resize-none text-base text-[hsl(0_0%_24%)]"
+              className="resize-none text-base text-foreground"
             />
+            <div className="mt-2 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">
+                {text.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}
+              </span>
+              {text.length > MAX_CHARS && (
+                <span className="text-[hsl(38_92%_50%)] font-medium">
+                  Long document — only the first 4,000 characters will be audited
+                </span>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="upload" className="mt-6">
@@ -207,7 +262,7 @@ const Index = () => {
                     <p className="text-sm font-medium text-foreground">
                       Drag a PDF here or click to browse
                     </p>
-                    <p className="text-xs text-muted-foreground">PDF files only</p>
+                    <p className="text-xs text-muted-foreground">PDF files only (max 5 MB)</p>
                   </>
                 )}
                 <input
@@ -221,7 +276,7 @@ const Index = () => {
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-3">
           <Button
             size="lg"
             onClick={handleAnalyse}
@@ -237,6 +292,12 @@ const Index = () => {
               "Analyse Now"
             )}
           </Button>
+
+          {apiError && (
+            <div className="w-full rounded-lg border border-[hsl(30_80%_60%)] bg-[hsl(30_100%_95%)] px-4 py-3 text-sm text-[hsl(30_80%_30%)]">
+              {apiError}
+            </div>
+          )}
         </div>
 
         {showResults && result ? (
@@ -294,7 +355,6 @@ const Index = () => {
             <p className="text-sm leading-relaxed text-foreground">
               {(() => {
                 const inputText = activeTab === "paste" ? text : pdfText || "";
-                // Highlight each claim in the original text
                 let lastIndex = 0;
                 const segments: React.ReactNode[] = [];
                 const sortedClaims = [...result.claims].sort((a, b) => {
@@ -308,12 +368,10 @@ const Index = () => {
                   const idx = inputText.toLowerCase().indexOf(claimLower, lastIndex);
                   if (idx === -1) return;
 
-                  // Add text before this claim
                   if (idx > lastIndex) {
                     segments.push(inputText.slice(lastIndex, idx));
                   }
 
-                  // Add highlighted claim
                   const color = claim.color || verdictColorMap[claim.verdict] || "#D97706";
                   segments.push(
                     <span
@@ -328,7 +386,6 @@ const Index = () => {
                   lastIndex = idx + claim.text.length;
                 });
 
-                // Add remaining text
                 if (lastIndex < inputText.length) {
                   segments.push(inputText.slice(lastIndex));
                 }
