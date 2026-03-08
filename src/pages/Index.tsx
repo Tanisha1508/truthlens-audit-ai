@@ -4,19 +4,33 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, Loader2, FileText, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-const MOCK_SCORE = 38;
-const MOCK_CLAIMS = [
-  { text: "The unemployment rate fell to 2.3% in Q3 2023", color: "#DC2626", label: "Hallucinated" },
-  { text: "Remote work increased productivity by 22% globally", color: "#D97706", label: "Uncertain" },
-  { text: "OpenAI was founded in 2015", color: "#16A34A", label: "Verified" },
-  { text: "McKinsey reports 80% of Fortune 500 firms use generative AI daily", color: "#DC2626", label: "Hallucinated" },
-];
+type Claim = {
+  text: string;
+  verdict: string;
+  color: string;
+};
+
+type AnalysisResult = {
+  trustScore: number;
+  verdict: string;
+  claims: Claim[];
+};
+
+const verdictColorMap: Record<string, string> = {
+  Verified: "#16A34A",
+  Uncertain: "#D97706",
+  Hallucinated: "#DC2626",
+};
 
 const Index = () => {
   const [text, setText] = useState("");
   const [activeTab, setActiveTab] = useState("paste");
   const [showResults, setShowResults] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
 
   // PDF state
   const [pdfText, setPdfText] = useState<string | null>(null);
@@ -81,6 +95,51 @@ const Index = () => {
     if (f?.type === "application/pdf") processPdf(f);
   };
 
+  const handleAnalyse = async () => {
+    const inputText = activeTab === "paste" ? text : pdfText;
+    if (!inputText?.trim()) {
+      toast.error("Please enter or upload some text to analyse.");
+      return;
+    }
+
+    setLoading(true);
+    setShowResults(false);
+    setResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-claims", {
+        body: { inputText },
+      });
+
+      if (error) {
+        console.error("Edge function error:", error);
+        toast.error("Analysis failed. Please try again.");
+        return;
+      }
+
+      if (data?.error) {
+        console.error("API error:", data.error);
+        toast.error(data.error);
+        return;
+      }
+
+      setResult(data as AnalysisResult);
+      setShowResults(true);
+    } catch (e) {
+      console.error("Unexpected error:", e);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const scoreColor =
+    result && result.trustScore >= 70
+      ? "#16A34A"
+      : result && result.trustScore >= 40
+      ? "#D97706"
+      : "#DC2626";
+
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-[hsl(0_0%_11%)] px-6 py-4 flex items-center justify-between">
@@ -116,7 +175,6 @@ const Index = () => {
 
           <TabsContent value="upload" className="mt-6">
             {pdfFileName && !pdfLoading ? (
-              /* File confirmation */
               <div className="flex items-center gap-4 rounded-lg border border-border bg-secondary p-6">
                 <FileText className="h-10 w-10 shrink-0 text-primary" />
                 <div className="min-w-0 flex-1">
@@ -164,12 +222,24 @@ const Index = () => {
         </Tabs>
 
         <div className="flex justify-center">
-          <Button size="lg" onClick={() => setShowResults(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 text-base font-semibold rounded-lg">
-            Analyse Now
+          <Button
+            size="lg"
+            onClick={handleAnalyse}
+            disabled={loading}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 text-base font-semibold rounded-lg"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Analysing...
+              </>
+            ) : (
+              "Analyse Now"
+            )}
           </Button>
         </div>
 
-        {showResults ? (
+        {showResults && result ? (
           <div className="rounded-lg border border-border bg-card p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Left — Circular Gauge */}
@@ -178,23 +248,23 @@ const Index = () => {
                   <circle cx="60" cy="60" r="52" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
                   <circle
                     cx="60" cy="60" r="52" fill="none"
-                    stroke="#DC2626" strokeWidth="8" strokeLinecap="round"
-                    strokeDasharray="327" strokeDashoffset={327 * (1 - MOCK_SCORE / 100)}
+                    stroke={scoreColor} strokeWidth="8" strokeLinecap="round"
+                    strokeDasharray="327" strokeDashoffset={327 * (1 - result.trustScore / 100)}
                     transform="rotate(-90 60 60)"
                   />
                   <text x="60" y="55" textAnchor="middle" className="text-3xl font-bold fill-foreground" fontSize="28" fontWeight="700">
-                    {MOCK_SCORE}
+                    {result.trustScore}
                   </text>
                   <text x="60" y="75" textAnchor="middle" className="fill-muted-foreground" fontSize="12">
                     /100
                   </text>
                 </svg>
-                <span className="text-sm font-bold" style={{ color: "#DC2626" }}>High Risk</span>
+                <span className="text-sm font-bold" style={{ color: scoreColor }}>{result.verdict}</span>
               </div>
 
               {/* Right — Claim chips */}
               <div className="flex flex-col gap-3">
-                {MOCK_CLAIMS.map((claim, i) => (
+                {result.claims.map((claim, i) => (
                   <div
                     key={i}
                     className="rounded-lg border-l-4 bg-muted/50 p-4"
@@ -205,40 +275,66 @@ const Index = () => {
                       className="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
                       style={{ color: claim.color, backgroundColor: `${claim.color}18` }}
                     >
-                      {claim.label}
+                      {claim.verdict}
                     </span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-        ) : (
+        ) : !loading ? (
           <div className="rounded-lg bg-muted p-12 text-center">
             <p className="text-muted-foreground">Your audit will appear here</p>
           </div>
-        )}
+        ) : null}
 
-        {showResults && (
+        {showResults && result && (
           <div className="rounded-lg border border-border bg-card p-6">
             <h2 className="text-lg font-semibold text-foreground mb-4">Highlighted Analysis</h2>
             <p className="text-sm leading-relaxed text-foreground">
-              According to recent data,{" "}
-              <span className="rounded px-1" style={{ backgroundColor: "rgba(220, 38, 38, 0.2)" }}>
-                the unemployment rate fell to 2.3% in Q3 2023
-              </span>
-              , while{" "}
-              <span className="rounded px-1" style={{ backgroundColor: "rgba(217, 119, 6, 0.2)" }}>
-                remote work increased productivity by 22% globally
-              </span>
-              .{" "}
-              <span className="rounded px-1" style={{ backgroundColor: "rgba(22, 163, 74, 0.2)" }}>
-                OpenAI was founded in 2015
-              </span>
-              , and McKinsey reports{" "}
-              <span className="rounded px-1" style={{ backgroundColor: "rgba(220, 38, 38, 0.2)" }}>
-                80% of Fortune 500 firms use generative AI daily
-              </span>
-              .
+              {(() => {
+                const inputText = activeTab === "paste" ? text : pdfText || "";
+                // Highlight each claim in the original text
+                let lastIndex = 0;
+                const segments: React.ReactNode[] = [];
+                const sortedClaims = [...result.claims].sort((a, b) => {
+                  const aIdx = inputText.toLowerCase().indexOf(a.text.toLowerCase());
+                  const bIdx = inputText.toLowerCase().indexOf(b.text.toLowerCase());
+                  return aIdx - bIdx;
+                });
+
+                sortedClaims.forEach((claim, i) => {
+                  const claimLower = claim.text.toLowerCase();
+                  const idx = inputText.toLowerCase().indexOf(claimLower, lastIndex);
+                  if (idx === -1) return;
+
+                  // Add text before this claim
+                  if (idx > lastIndex) {
+                    segments.push(inputText.slice(lastIndex, idx));
+                  }
+
+                  // Add highlighted claim
+                  const color = claim.color || verdictColorMap[claim.verdict] || "#D97706";
+                  segments.push(
+                    <span
+                      key={i}
+                      className="rounded px-1"
+                      style={{ backgroundColor: `${color}33` }}
+                    >
+                      {inputText.slice(idx, idx + claim.text.length)}
+                    </span>
+                  );
+
+                  lastIndex = idx + claim.text.length;
+                });
+
+                // Add remaining text
+                if (lastIndex < inputText.length) {
+                  segments.push(inputText.slice(lastIndex));
+                }
+
+                return segments.length > 0 ? segments : inputText;
+              })()}
             </p>
           </div>
         )}
