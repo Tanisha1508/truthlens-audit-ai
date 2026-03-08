@@ -218,7 +218,7 @@ const Index = () => {
             />
             <div className="mt-2 flex items-center justify-between text-xs">
               <span className="text-muted-foreground">
-                {text.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}
+                {text.length.toLocaleString()} / {MAX_CHARS.toLocaleString()} characters
               </span>
               {text.length > MAX_CHARS && (
                 <span className="text-[hsl(38_92%_50%)] font-medium">
