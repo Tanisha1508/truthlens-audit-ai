@@ -303,31 +303,6 @@ const Index = () => {
 
         {showResults && result ? (
           <div className="space-y-6">
-            {(() => {
-              const hallucinatedCount = result.claims.filter(c => c.verdict === "Hallucinated").length;
-              let summaryText = "This content appears reliable.";
-              if (hallucinatedCount === 1) {
-                summaryText = "1 claim flagged as likely hallucinated. Review before use.";
-              } else if (hallucinatedCount > 1) {
-                summaryText = `${hallucinatedCount} claims flagged as likely hallucinated. High risk content.`;
-              }
-
-              const isGood = result.trustScore >= 70;
-              const isWarning = result.trustScore >= 40 && result.trustScore < 70;
-              
-              const bgClass = isGood ? "bg-[#F0FDF4]" : isWarning ? "bg-[#FFFBEB]" : "bg-[#FEF2F2]";
-              const borderClass = isGood ? "border-[#BBF7D0]" : isWarning ? "border-[#FDE68A]" : "border-[#FECACA]";
-              
-              return (
-                <div className={`flex items-center justify-between rounded-lg border px-6 py-4 ${bgClass} ${borderClass}`}>
-                  <p className="font-bold text-slate-900">{summaryText}</p>
-                  <span className="text-4xl font-bold" style={{ color: scoreColor }}>
-                    {result.trustScore}
-                  </span>
-                </div>
-              );
-            })()}
-
             <div className="rounded-lg border border-border bg-card p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Left — Circular Gauge */}
