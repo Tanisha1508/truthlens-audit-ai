@@ -83,8 +83,11 @@ const Index = () => {
       if (!extracted.trim()) throw new Error("empty");
 
       setPdfText(extracted);
+      setPdfPages(parts);
       setPdfFileName(f.name);
       setPdfPageCount(totalPages);
+      setPageFrom(1);
+      setPageTo(Math.min(totalPages, 15));
     } catch {
       setPdfError(
         "Could not read this PDF. Please try a different file or paste the text manually."
