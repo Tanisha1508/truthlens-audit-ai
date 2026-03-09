@@ -273,7 +273,7 @@ const Index = () => {
                   </button>
                 </div>
                 <div className="mt-4 space-y-2">
-                  <p className="text-sm font-medium text-foreground">Select pages to analyse</p>
+                  <p className="text-sm font-medium text-foreground">Pages to analyse (15-page limit per analysis)</p>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
                       <label className="text-xs text-muted-foreground">From page</label>
@@ -304,7 +304,7 @@ const Index = () => {
                       For best results, select up to 15 pages at a time.
                     </div>
                   )}
-                  <p className="text-xs text-muted-foreground">Large documents are analysed in sections for accuracy.</p>
+                  <p className="text-xs text-muted-foreground">TruthLens analyses up to 15 pages at a time for accuracy. For longer documents, run multiple analyses on different page ranges.</p>
                 </div>
               </>
             ) : (
