@@ -12,6 +12,8 @@ type Claim = {
   text: string;
   verdict: string;
   color: string;
+  sourceUrl?: string | null;
+  sourceTitle?: string | null;
 };
 
 type AnalysisResult = {
