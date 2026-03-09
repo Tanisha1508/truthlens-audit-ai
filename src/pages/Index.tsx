@@ -317,20 +317,22 @@ const Index = () => {
                 <div className="flex flex-col items-center justify-center gap-3">
                   <svg width="120" height="120" viewBox="0 0 120 120">
                     <circle cx="60" cy="60" r="52" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
-                    <circle
-                      cx="60" cy="60" r="52" fill="none"
-                      stroke={scoreColor} strokeWidth="8" strokeLinecap="round"
-                      strokeDasharray="327" strokeDashoffset={327 * (1 - result.trustScore / 100)}
-                      transform="rotate(-90 60 60)"
-                    />
-                    <text x="60" y="55" textAnchor="middle" className="text-3xl font-bold fill-foreground" fontSize="28" fontWeight="700">
-                      {result.trustScore}
-                    </text>
-                    <text x="60" y="75" textAnchor="middle" className="fill-muted-foreground" fontSize="12">
-                      /100
-                    </text>
+                    {isAllUnverifiable ? (
+                      <>
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="#6B7280" strokeWidth="8" strokeLinecap="round" strokeDasharray="327" strokeDashoffset="0" transform="rotate(-90 60 60)" />
+                        <text x="60" y="58" textAnchor="middle" className="text-3xl font-bold fill-foreground" fontSize="28" fontWeight="700">--</text>
+                      </>
+                    ) : (
+                      <>
+                        <circle cx="60" cy="60" r="52" fill="none" stroke={scoreColor} strokeWidth="8" strokeLinecap="round" strokeDasharray="327" strokeDashoffset={327 * (1 - result.trustScore / 100)} transform="rotate(-90 60 60)" />
+                        <text x="60" y="55" textAnchor="middle" className="text-3xl font-bold fill-foreground" fontSize="28" fontWeight="700">{result.trustScore}</text>
+                        <text x="60" y="75" textAnchor="middle" className="fill-muted-foreground" fontSize="12">/100</text>
+                      </>
+                    )}
                   </svg>
-                  <span className="text-sm font-bold" style={{ color: scoreColor }}>{result.verdict}</span>
+                  <span className="text-sm font-bold" style={{ color: isAllUnverifiable ? "#6B7280" : scoreColor }}>
+                    {isAllUnverifiable ? "Not Applicable" : result.verdict}
+                  </span>
                 </div>
 
                 {/* Right — Verdict Cards */}
