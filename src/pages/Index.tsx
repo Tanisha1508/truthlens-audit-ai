@@ -26,6 +26,7 @@ const verdictColorMap: Record<string, string> = {
   Verified: "#16A34A",
   Uncertain: "#D97706",
   Hallucinated: "#DC2626",
+  Unverifiable: "#6B7280",
 };
 
 const MAX_CHARS = 4000;
