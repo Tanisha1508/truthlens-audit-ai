@@ -142,7 +142,14 @@ const Index = () => {
   };
 
   const handleAnalyse = async () => {
-    let inputText = activeTab === "paste" ? text : pdfText;
+    let inputText: string | null = null;
+    if (activeTab === "paste") {
+      inputText = text;
+    } else if (pdfPages.length > 0) {
+      const from = Math.max(1, pageFrom) - 1;
+      const to = Math.min(pdfPageCount, pageTo);
+      inputText = pdfPages.slice(from, to).join("\n\n");
+    }
     if (!inputText?.trim()) {
       toast.error("Please paste text or upload a PDF first.");
       return;
