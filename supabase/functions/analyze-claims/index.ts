@@ -137,8 +137,27 @@ Call the report_analysis function with your results.`;
     const data = await response.json();
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
 
+    // Extract grounding sources from Gemini response
+    const groundingChunks = data.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    const sources = groundingChunks
+      .filter((chunk: any) => chunk.web?.uri)
+      .map((chunk: any) => ({
+        url: chunk.web.uri,
+        title: chunk.web.title || "Source"
+      }));
+
     if (toolCall?.function?.name === "report_analysis") {
       const result = JSON.parse(toolCall.function.arguments);
+      
+      // Distribute sources across claims
+      if (result.claims && Array.isArray(result.claims)) {
+        result.claims = result.claims.map((claim: any, index: number) => ({
+          ...claim,
+          sourceUrl: sources[index]?.url || null,
+          sourceTitle: sources[index]?.title || null
+        }));
+      }
+      
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
