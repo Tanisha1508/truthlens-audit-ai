@@ -306,6 +306,7 @@ const Index = () => {
                 )}
                 <p className="text-xs text-muted-foreground">Large documents are analysed in sections for accuracy.</p>
               </div>
+            ) : (
               <label
                 onDrop={handleDrop}
                 onDragOver={(e) => e.preventDefault()}
