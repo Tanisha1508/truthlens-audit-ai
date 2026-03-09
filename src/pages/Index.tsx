@@ -33,6 +33,16 @@ const verdictColorMap: Record<string, string> = {
 const MAX_CHARS = 4000;
 const MAX_PDF_SIZE = 5 * 1024 * 1024;
 
+const safeUrl = (url: string | null | undefined): string | null => {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return ['https:', 'http:'].includes(parsed.protocol) ? url : null;
+  } catch {
+    return null;
+  }
+};
+
 const Index = () => {
   const [text, setText] = useState("");
   const [activeTab, setActiveTab] = useState("paste");
