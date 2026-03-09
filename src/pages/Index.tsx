@@ -3,7 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, Loader2, FileText, AlertCircle, X } from "lucide-react";
+import { Upload, Loader2, FileText, AlertCircle, X, AlertTriangle } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -42,10 +43,13 @@ const Index = () => {
 
   // PDF state
   const [pdfText, setPdfText] = useState<string | null>(null);
+  const [pdfPages, setPdfPages] = useState<string[]>([]);
   const [pdfFileName, setPdfFileName] = useState<string | null>(null);
   const [pdfPageCount, setPdfPageCount] = useState(0);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const [pageFrom, setPageFrom] = useState(1);
+  const [pageTo, setPageTo] = useState(1);
 
   const processPdf = useCallback(async (f: File) => {
     if (f.size > MAX_PDF_SIZE) {
@@ -79,8 +83,11 @@ const Index = () => {
       if (!extracted.trim()) throw new Error("empty");
 
       setPdfText(extracted);
+      setPdfPages(parts);
       setPdfFileName(f.name);
       setPdfPageCount(totalPages);
+      setPageFrom(1);
+      setPageTo(Math.min(totalPages, 15));
     } catch {
       setPdfError(
         "Could not read this PDF. Please try a different file or paste the text manually."
@@ -92,9 +99,12 @@ const Index = () => {
 
   const clearPdf = () => {
     setPdfText(null);
+    setPdfPages([]);
     setPdfFileName(null);
     setPdfPageCount(0);
     setPdfError(null);
+    setPageFrom(1);
+    setPageTo(1);
     setShowResults(false);
     setResult(null);
     setApiError(null);
@@ -132,7 +142,14 @@ const Index = () => {
   };
 
   const handleAnalyse = async () => {
-    let inputText = activeTab === "paste" ? text : pdfText;
+    let inputText: string | null = null;
+    if (activeTab === "paste") {
+      inputText = text;
+    } else if (pdfPages.length > 0) {
+      const from = Math.max(1, pageFrom) - 1;
+      const to = Math.min(pdfPageCount, pageTo);
+      inputText = pdfPages.slice(from, to).join("\n\n");
+    }
     if (!inputText?.trim()) {
       toast.error("Please paste text or upload a PDF first.");
       return;
@@ -239,21 +256,57 @@ const Index = () => {
 
           <TabsContent value="upload" className="mt-6">
             {pdfFileName && !pdfLoading ? (
-              <div className="flex items-center gap-4 rounded-lg border border-border bg-secondary p-6">
-                <FileText className="h-10 w-10 shrink-0 text-primary" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">{pdfFileName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {pdfPageCount} page{pdfPageCount !== 1 ? "s" : ""} · ready to audit
-                  </p>
+              <>
+                <div className="flex items-center gap-4 rounded-lg border border-border bg-secondary p-6">
+                  <FileText className="h-10 w-10 shrink-0 text-primary" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">{pdfFileName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {pdfPageCount} page{pdfPageCount !== 1 ? "s" : ""} · ready to audit
+                    </p>
+                  </div>
+                  <button
+                    onClick={clearPdf}
+                    className="text-sm font-medium text-primary hover:underline"
+                  >
+                    Remove
+                  </button>
                 </div>
-                <button
-                  onClick={clearPdf}
-                  className="text-sm font-medium text-primary hover:underline"
-                >
-                  Remove
-                </button>
-              </div>
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm font-medium text-foreground">Select pages to analyse</p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground">From page</label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={pdfPageCount}
+                        value={pageFrom}
+                        onChange={(e) => setPageFrom(Math.max(1, Math.min(pdfPageCount, Number(e.target.value) || 1)))}
+                        className="w-20 h-8 text-sm"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground">To page</label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={pdfPageCount}
+                        value={pageTo}
+                        onChange={(e) => setPageTo(Math.max(1, Math.min(pdfPageCount, Number(e.target.value) || 1)))}
+                        className="w-20 h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+                  {pageTo - pageFrom + 1 > 15 && (
+                    <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: "#D97706" }}>
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                      For best results, select up to 15 pages at a time.
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">Large documents are analysed in sections for accuracy.</p>
+                </div>
+              </>
             ) : (
               <label
                 onDrop={handleDrop}
