@@ -273,7 +273,7 @@ const Index = () => {
                   </button>
                 </div>
                 <div className="mt-4 space-y-2">
-                  <p className="text-sm font-medium text-foreground">Select pages to analyse</p>
+                  <p className="text-sm font-medium text-foreground">Pages to analyse (15-page limit per analysis)</p>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
                       <label className="text-xs text-muted-foreground">From page</label>
