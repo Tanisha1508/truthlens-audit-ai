@@ -271,7 +271,41 @@ const Index = () => {
                   Remove
                 </button>
               </div>
-            ) : (
+              {/* Page range selector */}
+              <div className="mt-4 space-y-2">
+                <p className="text-sm font-medium text-foreground">Select pages to analyse</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-muted-foreground">From page</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={pdfPageCount}
+                      value={pageFrom}
+                      onChange={(e) => setPageFrom(Math.max(1, Math.min(pdfPageCount, Number(e.target.value) || 1)))}
+                      className="w-20 h-8 text-sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-muted-foreground">To page</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={pdfPageCount}
+                      value={pageTo}
+                      onChange={(e) => setPageTo(Math.max(1, Math.min(pdfPageCount, Number(e.target.value) || 1)))}
+                      className="w-20 h-8 text-sm"
+                    />
+                  </div>
+                </div>
+                {pageTo - pageFrom + 1 > 15 && (
+                  <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: "#D97706" }}>
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    For best results, select up to 15 pages at a time.
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">Large documents are analysed in sections for accuracy.</p>
+              </div>
               <label
                 onDrop={handleDrop}
                 onDragOver={(e) => e.preventDefault()}
