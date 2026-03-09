@@ -54,5 +54,3 @@ VITE_GEMINI_API_KEY= <your_key_from_aistudio.google.com>
 ```
 
 ---
-
-Built by Tanisha · PM Portfolio 2026
