@@ -46,7 +46,6 @@ git clone <https://github.com/Tanisha1508/truthlens-audit-ai.git>
 cd <TruthLens-Audit-AI>
 npm install
 npm run dev
-
 Add VITE_GEMINI_API_KEY to your .env file by fetching it from your Google AI Studio.
 
 ---
