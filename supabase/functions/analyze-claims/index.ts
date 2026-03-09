@@ -43,6 +43,8 @@ function getCorsHeaders(req: Request) {
 // ─── END GEMINI FALLBACK ──────────────────────────────────────────────────────
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -51,7 +53,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "LOVABLE_API_KEY is not configured" }),
+        JSON.stringify({ error: "Server configuration error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -60,6 +62,20 @@ serve(async (req) => {
     if (!inputText || typeof inputText !== "string") {
       return new Response(
         JSON.stringify({ error: "inputText is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (inputText.trim().length === 0) {
+      return new Response(
+        JSON.stringify({ error: "inputText cannot be empty" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (inputText.length > MAX_INPUT_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: "Input too long" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -186,7 +202,7 @@ Call the report_analysis function with your results.`;
   } catch (e) {
     console.error("analyze-claims error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: "An unexpected error occurred. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
