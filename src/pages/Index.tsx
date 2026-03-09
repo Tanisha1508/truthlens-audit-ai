@@ -342,7 +342,7 @@ const Index = () => {
                     if (claim.verdict === "Verified") subtext = "Confirmed by live sources";
                     else if (claim.verdict === "Uncertain") subtext = "Partially supported by available sources";
                     else if (claim.verdict === "Hallucinated") subtext = "Flagged: statistic could not be verified by live sources";
-
+                    else if (claim.verdict === "Unverifiable") subtext = "Personal statement — cannot be fact-checked";
                     return (
                       <div
                         key={i}
