@@ -172,12 +172,14 @@ const Index = () => {
     }
   };
 
-  const scoreColor =
-    result && result.trustScore >= 70
-      ? "#16A34A"
-      : result && result.trustScore >= 40
-      ? "#D97706"
-      : "#DC2626";
+  const isAllUnverifiable = result && (result.trustScore === -1 || result.trustScore === null || result.trustScore === 0) && result.claims?.every(c => c.verdict === "Unverifiable");
+  const scoreColor = isAllUnverifiable
+    ? "#6B7280"
+    : result && result.trustScore >= 70
+    ? "#16A34A"
+    : result && result.trustScore >= 40
+    ? "#D97706"
+    : "#DC2626";
 
   return (
     <div className="min-h-screen bg-background">
