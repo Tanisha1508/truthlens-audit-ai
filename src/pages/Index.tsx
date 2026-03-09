@@ -33,6 +33,16 @@ const verdictColorMap: Record<string, string> = {
 const MAX_CHARS = 4000;
 const MAX_PDF_SIZE = 5 * 1024 * 1024;
 
+const safeUrl = (url: string | null | undefined): string | null => {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return ['https:', 'http:'].includes(parsed.protocol) ? url : null;
+  } catch {
+    return null;
+  }
+};
+
 const Index = () => {
   const [text, setText] = useState("");
   const [activeTab, setActiveTab] = useState("paste");
@@ -409,20 +419,23 @@ const Index = () => {
                           >
                             {claim.verdict}
                           </span>
-                          {claim.sourceUrl ? (
-                            <a
-                              href={claim.sourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-teal-600 hover:underline"
-                            >
-                              {claim.sourceTitle || "View source →"}
-                            </a>
-                          ) : (
-                            <span className="text-sm italic text-muted-foreground">
-                              {subtext}
-                            </span>
-                          )}
+                          {(() => {
+                            const safe = safeUrl(claim.sourceUrl);
+                            return safe ? (
+                              <a
+                                href={safe}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-teal-600 hover:underline"
+                              >
+                                {claim.sourceTitle || "View source →"}
+                              </a>
+                            ) : (
+                              <span className="text-sm italic text-muted-foreground">
+                                {subtext}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                     );
