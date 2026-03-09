@@ -53,15 +53,20 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are a fact-checking AI. Analyze the following text and extract 3-5 factual claims.
+    const systemPrompt = `You are a fact-checking AI. Analyze the following text and extract 3-5 claims.
 
 CRITICAL RULES:
 - For each claim, provide a "claimSnippet" which is the EXACT verbatim substring copied from the input text. Do NOT rephrase or summarize — copy it character-for-character.
 - "text" is your analysis/explanation of the claim.
-- trustScore: 0-100 reflecting overall reliability
-- verdict: "Reliable" if trustScore >= 70, "Uncertain" if 40-69, "High Risk" if < 40
-- Each claim verdict: "Verified", "Uncertain", or "Hallucinated"
-- Each claim color: "#16A34A" for Verified, "#D97706" for Uncertain, "#DC2626" for Hallucinated
+- For each claim, determine if it is an objective factual claim or a personal/subjective statement. If it is personal or subjective (e.g. 'I felt', 'I used', 'in my experience', personal preferences, individual actions), label it Unverifiable. Only apply Verified, Uncertain, or Hallucinated to objective factual claims.
+- Each claim verdict: "Verified", "Uncertain", "Hallucinated", or "Unverifiable"
+  - "Verified" — objective fact confirmed by live sources
+  - "Uncertain" — objective fact that could not be fully confirmed
+  - "Hallucinated" — objective fact that contradicts live sources
+  - "Unverifiable" — personal opinion, subjective experience, or statement that cannot be fact-checked by nature
+- Each claim color: "#16A34A" for Verified, "#D97706" for Uncertain, "#DC2626" for Hallucinated, "#6B7280" for Unverifiable
+- trustScore: Calculate as the average of ONLY objective claims (exclude Unverifiable). Use these scores: Verified=85, Uncertain=50, Hallucinated=15. If all claims are Unverifiable, set trustScore to -1.
+- verdict: "Reliable" if trustScore >= 70, "Uncertain" if 40-69, "High Risk" if < 40, "N/A" if trustScore is -1
 
 Call the report_analysis function with your results.`;
 
@@ -95,7 +100,7 @@ Call the report_analysis function with your results.`;
                       properties: {
                         claimSnippet: { type: "string", description: "The EXACT verbatim substring from the input text. Must be a character-for-character copy." },
                         text: { type: "string", description: "Your analysis/explanation of this claim" },
-                        verdict: { type: "string", enum: ["Verified", "Uncertain", "Hallucinated"] },
+                        verdict: { type: "string", enum: ["Verified", "Uncertain", "Hallucinated", "Unverifiable"] },
                         color: { type: "string" },
                       },
                       required: ["claimSnippet", "text", "verdict", "color"],
