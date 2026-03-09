@@ -40,13 +40,18 @@ and end-to-end shipping using modern AI-native tooling.
 
 ---
 
-## Run locally
-
-git clone <https://github.com/Tanisha1508/truthlens-audit-ai.git>
-cd <TruthLens-Audit-AI>
+## Run Locally
+```bash
+git clone https://github.com/Tanisha1508/truthlens-audit-ai.git
+cd truthlens-audit-ai
 npm install
 npm run dev
-Add VITE_GEMINI_API_KEY to your .env file by fetching it from your Google AI Studio.
+```
+
+Add `VITE_GEMINI_API_KEY` to your `.env` file:
+```
+VITE_GEMINI_API_KEY=your_key_from_aistudio.google.com
+```
 
 ---
 
