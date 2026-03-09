@@ -304,7 +304,7 @@ const Index = () => {
                       For best results, select up to 15 pages at a time.
                     </div>
                   )}
-                  <p className="text-xs text-muted-foreground">Large documents are analysed in sections for accuracy.</p>
+                  <p className="text-xs text-muted-foreground">TruthLens analyses up to 15 pages at a time for accuracy. For longer documents, run multiple analyses on different page ranges.</p>
                 </div>
               </>
             ) : (
