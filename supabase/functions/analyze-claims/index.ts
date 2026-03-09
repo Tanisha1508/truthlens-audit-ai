@@ -100,7 +100,7 @@ Call the report_analysis function with your results.`;
                       properties: {
                         claimSnippet: { type: "string", description: "The EXACT verbatim substring from the input text. Must be a character-for-character copy." },
                         text: { type: "string", description: "Your analysis/explanation of this claim" },
-                        verdict: { type: "string", enum: ["Verified", "Uncertain", "Hallucinated"] },
+                        verdict: { type: "string", enum: ["Verified", "Uncertain", "Hallucinated", "Unverifiable"] },
                         color: { type: "string" },
                       },
                       required: ["claimSnippet", "text", "verdict", "color"],
