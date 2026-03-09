@@ -343,7 +343,7 @@ const Index = () => {
                         key={i}
                         className="rounded-lg border border-border bg-card p-4 shadow-sm"
                       >
-                        <p className="text-slate-800 dark:text-slate-200 font-medium mb-3">{claim.text}</p>
+                        <p className="text-foreground font-medium mb-3">"{claim.claimSnippet || claim.text}"</p>
                         <div className="flex flex-col items-start gap-1">
                           <span
                             className="inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold"
