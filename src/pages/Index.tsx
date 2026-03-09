@@ -26,6 +26,7 @@ const verdictColorMap: Record<string, string> = {
   Verified: "#16A34A",
   Uncertain: "#D97706",
   Hallucinated: "#DC2626",
+  Unverifiable: "#6B7280",
 };
 
 const MAX_CHARS = 4000;
@@ -171,12 +172,14 @@ const Index = () => {
     }
   };
 
-  const scoreColor =
-    result && result.trustScore >= 70
-      ? "#16A34A"
-      : result && result.trustScore >= 40
-      ? "#D97706"
-      : "#DC2626";
+  const isAllUnverifiable = result && (result.trustScore === -1 || result.trustScore === null || result.trustScore === 0) && result.claims?.every(c => c.verdict === "Unverifiable");
+  const scoreColor = isAllUnverifiable
+    ? "#6B7280"
+    : result && result.trustScore >= 70
+    ? "#16A34A"
+    : result && result.trustScore >= 40
+    ? "#D97706"
+    : "#DC2626";
 
   return (
     <div className="min-h-screen bg-background">
@@ -314,20 +317,22 @@ const Index = () => {
                 <div className="flex flex-col items-center justify-center gap-3">
                   <svg width="120" height="120" viewBox="0 0 120 120">
                     <circle cx="60" cy="60" r="52" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
-                    <circle
-                      cx="60" cy="60" r="52" fill="none"
-                      stroke={scoreColor} strokeWidth="8" strokeLinecap="round"
-                      strokeDasharray="327" strokeDashoffset={327 * (1 - result.trustScore / 100)}
-                      transform="rotate(-90 60 60)"
-                    />
-                    <text x="60" y="55" textAnchor="middle" className="text-3xl font-bold fill-foreground" fontSize="28" fontWeight="700">
-                      {result.trustScore}
-                    </text>
-                    <text x="60" y="75" textAnchor="middle" className="fill-muted-foreground" fontSize="12">
-                      /100
-                    </text>
+                    {isAllUnverifiable ? (
+                      <>
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="#6B7280" strokeWidth="8" strokeLinecap="round" strokeDasharray="327" strokeDashoffset="0" transform="rotate(-90 60 60)" />
+                        <text x="60" y="58" textAnchor="middle" className="text-3xl font-bold fill-foreground" fontSize="28" fontWeight="700">--</text>
+                      </>
+                    ) : (
+                      <>
+                        <circle cx="60" cy="60" r="52" fill="none" stroke={scoreColor} strokeWidth="8" strokeLinecap="round" strokeDasharray="327" strokeDashoffset={327 * (1 - result.trustScore / 100)} transform="rotate(-90 60 60)" />
+                        <text x="60" y="55" textAnchor="middle" className="text-3xl font-bold fill-foreground" fontSize="28" fontWeight="700">{result.trustScore}</text>
+                        <text x="60" y="75" textAnchor="middle" className="fill-muted-foreground" fontSize="12">/100</text>
+                      </>
+                    )}
                   </svg>
-                  <span className="text-sm font-bold" style={{ color: scoreColor }}>{result.verdict}</span>
+                  <span className="text-sm font-bold" style={{ color: isAllUnverifiable ? "#6B7280" : scoreColor }}>
+                    {isAllUnverifiable ? "Not Applicable" : result.verdict}
+                  </span>
                 </div>
 
                 {/* Right — Verdict Cards */}
@@ -337,7 +342,7 @@ const Index = () => {
                     if (claim.verdict === "Verified") subtext = "Confirmed by live sources";
                     else if (claim.verdict === "Uncertain") subtext = "Partially supported by available sources";
                     else if (claim.verdict === "Hallucinated") subtext = "Flagged: statistic could not be verified by live sources";
-
+                    else if (claim.verdict === "Unverifiable") subtext = "Personal statement — cannot be fact-checked";
                     return (
                       <div
                         key={i}
