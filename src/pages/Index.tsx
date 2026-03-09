@@ -92,6 +92,9 @@ const Index = () => {
     setPdfFileName(null);
     setPdfPageCount(0);
     setPdfError(null);
+    setShowResults(false);
+    setResult(null);
+    setApiError(null);
   };
 
   const handleClear = () => {
