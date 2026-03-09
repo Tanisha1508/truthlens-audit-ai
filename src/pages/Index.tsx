@@ -419,20 +419,23 @@ const Index = () => {
                           >
                             {claim.verdict}
                           </span>
-                          {claim.sourceUrl ? (
-                            <a
-                              href={claim.sourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-teal-600 hover:underline"
-                            >
-                              {claim.sourceTitle || "View source →"}
-                            </a>
-                          ) : (
-                            <span className="text-sm italic text-muted-foreground">
-                              {subtext}
-                            </span>
-                          )}
+                          {(() => {
+                            const safe = safeUrl(claim.sourceUrl);
+                            return safe ? (
+                              <a
+                                href={safe}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-teal-600 hover:underline"
+                              >
+                                {claim.sourceTitle || "View source →"}
+                              </a>
+                            ) : (
+                              <span className="text-sm italic text-muted-foreground">
+                                {subtext}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                     );
