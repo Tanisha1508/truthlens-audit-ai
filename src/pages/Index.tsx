@@ -99,9 +99,12 @@ const Index = () => {
 
   const clearPdf = () => {
     setPdfText(null);
+    setPdfPages([]);
     setPdfFileName(null);
     setPdfPageCount(0);
     setPdfError(null);
+    setPageFrom(1);
+    setPageTo(1);
     setShowResults(false);
     setResult(null);
     setApiError(null);
