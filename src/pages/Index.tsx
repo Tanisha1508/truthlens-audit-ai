@@ -302,45 +302,83 @@ const Index = () => {
         </div>
 
         {showResults && result ? (
-          <div className="rounded-lg border border-border bg-card p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left — Circular Gauge */}
-              <div className="flex flex-col items-center justify-center gap-3">
-                <svg width="120" height="120" viewBox="0 0 120 120">
-                  <circle cx="60" cy="60" r="52" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
-                  <circle
-                    cx="60" cy="60" r="52" fill="none"
-                    stroke={scoreColor} strokeWidth="8" strokeLinecap="round"
-                    strokeDasharray="327" strokeDashoffset={327 * (1 - result.trustScore / 100)}
-                    transform="rotate(-90 60 60)"
-                  />
-                  <text x="60" y="55" textAnchor="middle" className="text-3xl font-bold fill-foreground" fontSize="28" fontWeight="700">
-                    {result.trustScore}
-                  </text>
-                  <text x="60" y="75" textAnchor="middle" className="fill-muted-foreground" fontSize="12">
-                    /100
-                  </text>
-                </svg>
-                <span className="text-sm font-bold" style={{ color: scoreColor }}>{result.verdict}</span>
-              </div>
+          <div className="space-y-6">
+            {(() => {
+              const hallucinatedCount = result.claims.filter(c => c.verdict === "Hallucinated").length;
+              let summaryText = "This content appears reliable.";
+              if (hallucinatedCount === 1) {
+                summaryText = "1 claim flagged as likely hallucinated. Review before use.";
+              } else if (hallucinatedCount > 1) {
+                summaryText = `${hallucinatedCount} claims flagged as likely hallucinated. High risk content.`;
+              }
 
-              {/* Right — Claim chips */}
-              <div className="flex flex-col gap-3">
-                {result.claims.map((claim, i) => (
-                  <div
-                    key={i}
-                    className="rounded-lg border-l-4 bg-muted/50 p-4"
-                    style={{ borderLeftColor: claim.color }}
-                  >
-                    <p className="text-sm text-foreground mb-1">{claim.text}</p>
-                    <span
-                      className="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
-                      style={{ color: claim.color, backgroundColor: `${claim.color}18` }}
-                    >
-                      {claim.verdict}
-                    </span>
-                  </div>
-                ))}
+              const isGood = result.trustScore >= 70;
+              const isWarning = result.trustScore >= 40 && result.trustScore < 70;
+              
+              const bgClass = isGood ? "bg-[#F0FDF4]" : isWarning ? "bg-[#FFFBEB]" : "bg-[#FEF2F2]";
+              const borderClass = isGood ? "border-[#BBF7D0]" : isWarning ? "border-[#FDE68A]" : "border-[#FECACA]";
+              
+              return (
+                <div className={`flex items-center justify-between rounded-lg border px-6 py-4 ${bgClass} ${borderClass}`}>
+                  <p className="font-bold text-slate-900">{summaryText}</p>
+                  <span className="text-4xl font-bold" style={{ color: scoreColor }}>
+                    {result.trustScore}
+                  </span>
+                </div>
+              );
+            })()}
+
+            <div className="rounded-lg border border-border bg-card p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left — Circular Gauge */}
+                <div className="flex flex-col items-center justify-center gap-3">
+                  <svg width="120" height="120" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="52" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
+                    <circle
+                      cx="60" cy="60" r="52" fill="none"
+                      stroke={scoreColor} strokeWidth="8" strokeLinecap="round"
+                      strokeDasharray="327" strokeDashoffset={327 * (1 - result.trustScore / 100)}
+                      transform="rotate(-90 60 60)"
+                    />
+                    <text x="60" y="55" textAnchor="middle" className="text-3xl font-bold fill-foreground" fontSize="28" fontWeight="700">
+                      {result.trustScore}
+                    </text>
+                    <text x="60" y="75" textAnchor="middle" className="fill-muted-foreground" fontSize="12">
+                      /100
+                    </text>
+                  </svg>
+                  <span className="text-sm font-bold" style={{ color: scoreColor }}>{result.verdict}</span>
+                </div>
+
+                {/* Right — Verdict Cards */}
+                <div className="flex flex-col gap-4">
+                  {result.claims.map((claim, i) => {
+                    let subtext = "";
+                    if (claim.verdict === "Verified") subtext = "Confirmed by live sources";
+                    else if (claim.verdict === "Uncertain") subtext = "Partially supported by available sources";
+                    else if (claim.verdict === "Hallucinated") subtext = "Flagged: statistic could not be verified by live sources";
+
+                    return (
+                      <div
+                        key={i}
+                        className="rounded-lg border border-border bg-card p-4 shadow-sm"
+                      >
+                        <p className="text-slate-800 dark:text-slate-200 font-medium mb-3">{claim.text}</p>
+                        <div className="flex flex-col items-start gap-1">
+                          <span
+                            className="inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                            style={{ color: claim.color, backgroundColor: `${claim.color}18` }}
+                          >
+                            {claim.verdict}
+                          </span>
+                          <span className="text-sm italic text-muted-foreground">
+                            {subtext}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -349,86 +387,6 @@ const Index = () => {
             <p className="text-muted-foreground">Your audit will appear here</p>
           </div>
         ) : null}
-
-        {showResults && result && (
-          <div className="rounded-lg border border-border bg-card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-foreground">Highlighted Analysis</h2>
-              <div className="flex items-center gap-4 text-xs">
-                <span className="flex items-center gap-1.5">
-                  <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#16A34A33" }} />
-                  <span className="text-muted-foreground">Verified</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#D9770633" }} />
-                  <span className="text-muted-foreground">Uncertain</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#DC262633" }} />
-                  <span className="text-muted-foreground">Hallucinated</span>
-                </span>
-              </div>
-            </div>
-            <p className="text-sm leading-relaxed text-foreground">
-              {(() => {
-                const inputText = activeTab === "paste" ? text : pdfText || "";
-                const inputLower = inputText.toLowerCase();
-                let lastIndex = 0;
-                const segments: React.ReactNode[] = [];
-
-                const findIndex = (snippet: string, from: number): number => {
-                  const idx = inputLower.indexOf(snippet.toLowerCase(), from);
-                  if (idx !== -1) return idx;
-                  // Fuzzy fallback: try first 40 chars
-                  if (snippet.length > 40) {
-                    return inputLower.indexOf(snippet.slice(0, 40).toLowerCase(), from);
-                  }
-                  return -1;
-                };
-
-                const sortedClaims = [...result.claims].sort((a, b) => {
-                  const aSnippet = a.claimSnippet || a.text;
-                  const bSnippet = b.claimSnippet || b.text;
-                  return findIndex(aSnippet, 0) - findIndex(bSnippet, 0);
-                });
-
-                sortedClaims.forEach((claim, i) => {
-                  const snippet = claim.claimSnippet || claim.text;
-                  const idx = findIndex(snippet, lastIndex);
-                  if (idx === -1) return;
-
-                  if (idx > lastIndex) {
-                    segments.push(inputText.slice(lastIndex, idx));
-                  }
-
-                  const matchLen = inputLower.indexOf(snippet.toLowerCase(), idx) !== -1
-                    ? snippet.length
-                    : Math.min(snippet.slice(0, 40).length, inputText.length - idx);
-
-                  const color = claim.color || verdictColorMap[claim.verdict] || "#D97706";
-                  segments.push(
-                    <span
-                      key={i}
-                      className="rounded px-1"
-                      style={{ backgroundColor: `${color}33` }}
-                      title={`${claim.verdict}: ${claim.text}`}
-                    >
-                      {inputText.slice(idx, idx + matchLen)}
-                    </span>
-                  );
-
-                  lastIndex = idx + matchLen;
-                });
-
-                if (lastIndex < inputText.length) {
-                  segments.push(inputText.slice(lastIndex));
-                }
-
-                return segments.length > 0 ? segments : inputText;
-              })()}
-            </p>
-          </div>
-        )}
       </main>
     </div>
   );
