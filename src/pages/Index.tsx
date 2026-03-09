@@ -245,13 +245,24 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="paste" className="mt-6">
-            <Textarea
-              rows={8}
-              placeholder="Paste any AI-generated text here..."
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              className="resize-none text-base text-foreground"
-            />
+            <div className="relative">
+              <Textarea
+                rows={8}
+                placeholder="Paste any AI-generated text here..."
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                className="resize-none text-base text-foreground pr-10"
+              />
+              {text.length > 0 && (
+                <button
+                  onClick={() => setText("")}
+                  className="absolute top-2 right-2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label="Clear text"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
             <div className="mt-2 flex items-center justify-between text-xs">
               <span className="text-muted-foreground">
                 {text.length.toLocaleString()} / {MAX_CHARS.toLocaleString()} characters
