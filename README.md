@@ -50,7 +50,7 @@ npm run dev
 
 Add `VITE_GEMINI_API_KEY` to your `.env` file:
 ```
-VITE_GEMINI_API_KEY=your_key_from_aistudio.google.com
+VITE_GEMINI_API_KEY= <your_key_from_aistudio.google.com>
 ```
 
 ---
