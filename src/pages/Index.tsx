@@ -43,10 +43,13 @@ const Index = () => {
 
   // PDF state
   const [pdfText, setPdfText] = useState<string | null>(null);
+  const [pdfPages, setPdfPages] = useState<string[]>([]);
   const [pdfFileName, setPdfFileName] = useState<string | null>(null);
   const [pdfPageCount, setPdfPageCount] = useState(0);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const [pageFrom, setPageFrom] = useState(1);
+  const [pageTo, setPageTo] = useState(1);
 
   const processPdf = useCallback(async (f: File) => {
     if (f.size > MAX_PDF_SIZE) {
