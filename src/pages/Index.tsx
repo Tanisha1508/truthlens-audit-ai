@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 type Claim = {
+  claimSnippet?: string;
   text: string;
   verdict: string;
   color: string;
@@ -351,26 +352,58 @@ const Index = () => {
 
         {showResults && result && (
           <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Highlighted Analysis</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">Highlighted Analysis</h2>
+              <div className="flex items-center gap-4 text-xs">
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#16A34A33" }} />
+                  <span className="text-muted-foreground">Verified</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#D9770633" }} />
+                  <span className="text-muted-foreground">Uncertain</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#DC262633" }} />
+                  <span className="text-muted-foreground">Hallucinated</span>
+                </span>
+              </div>
+            </div>
             <p className="text-sm leading-relaxed text-foreground">
               {(() => {
                 const inputText = activeTab === "paste" ? text : pdfText || "";
+                const inputLower = inputText.toLowerCase();
                 let lastIndex = 0;
                 const segments: React.ReactNode[] = [];
+
+                const findIndex = (snippet: string, from: number): number => {
+                  const idx = inputLower.indexOf(snippet.toLowerCase(), from);
+                  if (idx !== -1) return idx;
+                  // Fuzzy fallback: try first 40 chars
+                  if (snippet.length > 40) {
+                    return inputLower.indexOf(snippet.slice(0, 40).toLowerCase(), from);
+                  }
+                  return -1;
+                };
+
                 const sortedClaims = [...result.claims].sort((a, b) => {
-                  const aIdx = inputText.toLowerCase().indexOf(a.text.toLowerCase());
-                  const bIdx = inputText.toLowerCase().indexOf(b.text.toLowerCase());
-                  return aIdx - bIdx;
+                  const aSnippet = a.claimSnippet || a.text;
+                  const bSnippet = b.claimSnippet || b.text;
+                  return findIndex(aSnippet, 0) - findIndex(bSnippet, 0);
                 });
 
                 sortedClaims.forEach((claim, i) => {
-                  const claimLower = claim.text.toLowerCase();
-                  const idx = inputText.toLowerCase().indexOf(claimLower, lastIndex);
+                  const snippet = claim.claimSnippet || claim.text;
+                  const idx = findIndex(snippet, lastIndex);
                   if (idx === -1) return;
 
                   if (idx > lastIndex) {
                     segments.push(inputText.slice(lastIndex, idx));
                   }
+
+                  const matchLen = inputLower.indexOf(snippet.toLowerCase(), idx) !== -1
+                    ? snippet.length
+                    : Math.min(snippet.slice(0, 40).length, inputText.length - idx);
 
                   const color = claim.color || verdictColorMap[claim.verdict] || "#D97706";
                   segments.push(
@@ -378,12 +411,13 @@ const Index = () => {
                       key={i}
                       className="rounded px-1"
                       style={{ backgroundColor: `${color}33` }}
+                      title={`${claim.verdict}: ${claim.text}`}
                     >
-                      {inputText.slice(idx, idx + claim.text.length)}
+                      {inputText.slice(idx, idx + matchLen)}
                     </span>
                   );
 
-                  lastIndex = idx + claim.text.length;
+                  lastIndex = idx + matchLen;
                 });
 
                 if (lastIndex < inputText.length) {

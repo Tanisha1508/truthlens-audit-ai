@@ -6,6 +6,31 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ─── GEMINI DIRECT FALLBACK (commented out) ───────────────────────────────────
+// If you want to use your own Gemini API key instead of the Lovable AI Gateway,
+// uncomment this block and comment out the Lovable Gateway block below.
+//
+// const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+// if (!GEMINI_API_KEY) {
+//   return new Response(
+//     JSON.stringify({ error: "GEMINI_API_KEY is not configured" }),
+//     { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+//   );
+// }
+//
+// const response = await fetch(
+//   `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+//   {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify({
+//       contents: [{ parts: [{ text: systemPrompt + "\n\nText to analyze:\n" + inputText }] }],
+//       generationConfig: { responseMimeType: "application/json" },
+//     }),
+//   }
+// );
+// ─── END GEMINI FALLBACK ──────────────────────────────────────────────────────
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -28,15 +53,17 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are a fact-checking AI. Analyze the following text and extract 3-5 factual claims. For each claim, assess its accuracy.
+    const systemPrompt = `You are a fact-checking AI. Analyze the following text and extract 3-5 factual claims.
 
-Call the report_analysis function with your results.
-
-Rules:
+CRITICAL RULES:
+- For each claim, provide a "claimSnippet" which is the EXACT verbatim substring copied from the input text. Do NOT rephrase or summarize — copy it character-for-character.
+- "text" is your analysis/explanation of the claim.
 - trustScore: 0-100 reflecting overall reliability
 - verdict: "Reliable" if trustScore >= 70, "Uncertain" if 40-69, "High Risk" if < 40
 - Each claim verdict: "Verified", "Uncertain", or "Hallucinated"
-- Each claim color: "#16A34A" for Verified, "#D97706" for Uncertain, "#DC2626" for Hallucinated`;
+- Each claim color: "#16A34A" for Verified, "#D97706" for Uncertain, "#DC2626" for Hallucinated
+
+Call the report_analysis function with your results.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -66,11 +93,12 @@ Rules:
                     items: {
                       type: "object",
                       properties: {
-                        text: { type: "string" },
+                        claimSnippet: { type: "string", description: "The EXACT verbatim substring from the input text. Must be a character-for-character copy." },
+                        text: { type: "string", description: "Your analysis/explanation of this claim" },
                         verdict: { type: "string", enum: ["Verified", "Uncertain", "Hallucinated"] },
                         color: { type: "string" },
                       },
-                      required: ["text", "verdict", "color"],
+                      required: ["claimSnippet", "text", "verdict", "color"],
                     },
                   },
                 },
@@ -86,7 +114,7 @@ Rules:
     if (!response.ok) {
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      
+
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }),
@@ -99,7 +127,7 @@ Rules:
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      
+
       return new Response(
         JSON.stringify({ error: "AI analysis failed" }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
